@@ -58,9 +58,9 @@ class Day15 : Day {
 
         fun simulateMovements() {
             movements.forEachIndexed { index, c ->
-                println("---$index($c)---")
+//                println("---$index($c)---")
                 robotPos.move(MOVEMENT_VECTORS[c.toString()]!!)
-                printWarehouse()
+//                printWarehouse()
             }
         }
 
@@ -85,52 +85,48 @@ class Day15 : Day {
             }.sum()
         }
 
-        private fun Pair<Int, Int>.move(vector: Pair<Int, Int>): Boolean {
-            val targetPos = (first + vector.first) to (second + vector.second)
-            fun doMovement() {
-                if (matrix[first][second] == "@") {
-                    robotPos = targetPos.first to targetPos.second
+        private fun Pair<Int, Int>.move(vector: Pair<Int, Int>) {
+            runCatching {
+                collectPosToMove(vector).distinct().forEach {
+                    val targetPos = (it.first + vector.first) to (it.second + vector.second)
+                    if (matrix[it.first][it.second] == "@") {
+                        robotPos = targetPos.first to targetPos.second
+                    }
+                    matrix[targetPos.first][targetPos.second] = matrix[it.first][it.second]
+                    matrix[it.first][it.second] = "."
                 }
-                matrix[targetPos.first][targetPos.second] = matrix[first][second]
-                matrix[first][second] = "."
             }
+        }
 
-            val movementAllowed = when (matrix[targetPos.first][targetPos.second]) {
-                "#" -> false
-                "." -> {
-                    true
-                }
+        private fun Pair<Int, Int>.collectPosToMove(vector: Pair<Int, Int>): List<Pair<Int, Int>> {
+            val targetPos = (first + vector.first) to (second + vector.second)
 
-                "O" -> {
-                    targetPos.move(vector)
-                }
-
+            return when (matrix[targetPos.first][targetPos.second]) {
+                "#" -> error("Movement not possible")
+                "." -> listOf(this)
+                "O" -> targetPos.collectPosToMove(vector) + this
                 "[" -> {
                     if (vector.first == 0) {
                         //we move sidewards - no need to obey box width
-                        targetPos.move(vector)
+                        targetPos.collectPosToMove(vector) + this
                     } else {
                         //Check right neighbor as it's part of the box and we move vertical
-                        targetPos.move(vector) && (targetPos.first to targetPos.second + 1).move(vector)
+                        targetPos.collectPosToMove(vector) + (targetPos.first to targetPos.second + 1).collectPosToMove(vector) + this
                     }
                 }
 
                 "]" -> {
                     if (vector.first == 0) {
                         //we move sidewards - no need to obey box width
-                        targetPos.move(vector)
+                        targetPos.collectPosToMove(vector) + this
                     } else {
-                        //Check left neighbor as it's part of the box and we move vertical
-                        targetPos.move(vector) && (targetPos.first to targetPos.second - 1).move(vector)
+                        //Check right neighbor as it's part of the box and we move vertical
+                        targetPos.collectPosToMove(vector) + (targetPos.first to targetPos.second - 1).collectPosToMove(vector) + this
                     }
                 }
 
                 else -> error("Character ${matrix[targetPos.first][targetPos.second]} is not allowed")
             }
-            if (movementAllowed) {
-                doMovement()
-            }
-            return movementAllowed
         }
     }
 
