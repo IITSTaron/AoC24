@@ -8,7 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest
 @SpringBootTest
 class Test {
     companion object {
-        private const val DAY = 14
+        private const val DAY = 15
         private const val PATH = "C:\\Users\\Marvin\\IdeaProjects\\AoC24\\src\\main\\resources\\"
     }
 
